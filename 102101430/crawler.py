@@ -149,7 +149,7 @@ def main():
         worksheet2.cell(row=row, column=1, value=item)
         worksheet2.cell(row=row, column=2, value=count)
     # 保存 Excel 工作簿
-    workbook.save('Top_20_danmu.xlsx')
+    workbook.save('output/Top_20_danmu.xlsx')
     print("导入完成！")
 
 
