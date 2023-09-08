@@ -2,24 +2,20 @@
 import jieba
 import openpyxl
 import wordcloud
+import configparser
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import stylecloud
 from PIL import Image
 from collections import Counter
 from multiprocessing import Pool
 
-
-# 定义一些参数
-workbook_Name = 'output/Top_20_danmu.xlsx'  # 要读取的Excel表的名称，默认为crawler.py生成的文件
-sheet_Name = '所有弹幕'  # 要读取的Excel表的页的名称，可从['Top 20', '所有弹幕']中选择
-stop_Word = ['!', '！', ':', '*', '，', ',', '？',
+# 定义一些参数，参数的详细介绍见GitHub上的readme.md
+config_Section_Name = 'GC_DEFAULT'  # 要读取的配置页名
+stop_Word = ['!', '！', ':', '*', '，', ',', '？', '《', '》',
              '。', ' ', '的', '了', '是', '啊', '吗', '吧']  # 停用词表
-WC_Width = 1000  # 词云图的宽度
-WC_Height = 1000  # 词云图的高度
-font_Path = "config/msyh.ttc"  # 字体存储路径
-pic_Path = "config/m.png"  # 词云背景图路径
-output_Path = "output/word_could.png"
+
 
 def read_Danmu():  # 从Excel表中读取数据
     workbook = openpyxl.load_workbook(workbook_Name)
@@ -46,11 +42,10 @@ def generate_Word_Cloud(counter):  # 生成词云图
     pic = np.array(Image.open(pic_Path))
     image_colors = wordcloud.ImageColorGenerator(pic)
     word_Cloud = wordcloud.WordCloud(
-        font_path=font_Path, mask=pic, width=WC_Width, height=WC_Height, mode="RGBA", background_color=None)
+        font_path=font_Path, mask=pic, width=WC_Width, height=WC_Height, mode="RGBA", background_color='white')
     word_Cloud.generate_from_frequencies(counter)
-
     plt.imshow(word_Cloud.recolor(color_func=image_colors),
-               interpolation='bilinear')
+            interpolation='bilinear')
     word_Cloud.to_file(output_Path)
     plt.axis('off')
     plt.show()
@@ -69,4 +64,21 @@ def main():
 
 
 if __name__ == "__main__":
+    # 读取参数的配置
+    config = configparser.ConfigParser()
+    config.read('config/config.ini')
+    workbook_Name = config.get(config_Section_Name, 'workbook_name',
+                               fallback='output/Top_20_danmu.xlsx')  # 要读取的Excel表的名称，默认为crawler.py生成的文件
+    # 要读取的Excel表的页的名称，可从['Top 20', '所有弹幕']中选择
+    sheet_Name = config.get(config_Section_Name, 'sheet_Name', fallback='所有弹幕')
+    WC_Width = config.getint(
+        config_Section_Name, 'WC_Width', fallback=1200)  # 词云图的宽度
+    WC_Height = config.getint(
+        config_Section_Name, 'WC_Height', fallback=1200)  # 词云图的高度
+    font_Path = config.get(config_Section_Name, 'font_Path',
+                           fallback="config/msyh.ttc")  # 字体存储路径
+    pic_Path = config.get(config_Section_Name, 'pic_Path',
+                          fallback="config/m.png")  # 词云背景图路径
+    output_Path = config.get(
+        config_Section_Name, 'output_Path', fallback="output/word_could.png")
     main()
